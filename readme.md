@@ -1,4 +1,4 @@
-# rule-keeper-pro
+# rule-keeper
 
 [![skills.sh](https://skills.sh/b/adouwt/rule-keeper)](https://skills.sh/adouwt/rule-keeper)
 
@@ -15,7 +15,7 @@ npx skills add adouwt/rule-keeper
 npx skills add adouwt/rule-keeper -g
 
 # 只装这一个 skill
-npx skills add adouwt/rule-keeper --skill rule-keeper-pro
+npx skills add adouwt/rule-keeper --skill rule-keeper
 
 # 指定装到某个 agent（如 cursor / devin / claude-code）
 npx skills add adouwt/rule-keeper -a cursor -a devin
@@ -23,7 +23,7 @@ npx skills add adouwt/rule-keeper -a cursor -a devin
 
 ## 这是什么
 
-在 AI 辅助开发中，项目规则文件（如 `AGENTS.md`）是 AI 与协作者的行为契约：记录**已经做出的决策和约定**，而不是代码事实。但规则文件很容易随着项目演进逐渐漂移、膨胀、失效——`rule-keeper-pro` 就是用来解决这个问题的。
+在 AI 辅助开发中，项目规则文件（如 `AGENTS.md`）是 AI 与协作者的行为契约：记录**已经做出的决策和约定**，而不是代码事实。但规则文件很容易随着项目演进逐渐漂移、膨胀、失效——`rule-keeper` 就是用来解决这个问题的。
 
 它会在合适的时机（功能完成 / PR 合并 / 会话收尾）主动触发，把本轮值得固化的**决策、约定、边界、踩坑、验收标准**写入规则文件，同时修订或删除已过期内容，保证规则：
 
@@ -43,13 +43,13 @@ npx skills add adouwt/rule-keeper -a cursor -a devin
 
 ```bash
 # 以 Devin 为例（用户级 skill 目录）
-cp -r skills/rule-keeper-pro ~/.config/devin/skills/rule-keeper-pro
+cp -r skills/rule-keeper ~/.config/devin/skills/rule-keeper
 
 # 以 Cursor 为例
-cp -r skills/rule-keeper-pro ~/.cursor/skills/rule-keeper-pro
+cp -r skills/rule-keeper ~/.cursor/skills/rule-keeper
 ```
 
-无需额外依赖，仅用到 Python 3 标准库（脚本位于 `skills/rule-keeper-pro/scripts/`）。
+无需额外依赖，仅用到 Python 3 标准库（脚本位于 `skills/rule-keeper/scripts/`）。
 
 ## 目录结构
 
@@ -57,7 +57,7 @@ cp -r skills/rule-keeper-pro ~/.cursor/skills/rule-keeper-pro
 rule-keeper/
 ├── readme.md                                  # 仓库级说明（本文件）
 └── skills/
-    └── rule-keeper-pro/                       # skill 目录（目录名即 skill 名）
+    └── rule-keeper/                       # skill 目录（目录名即 skill 名）
         ├── SKILL.md                           # Skill 主入口：工作流程与触发时机
         ├── assets/
         │   └── AGENTS.md.tmpl                  # 规则文件模板（6 段结构）
@@ -70,14 +70,14 @@ rule-keeper/
 
 ## 工作流程（7 步）
 
-`rule-keeper-pro` 在被触发后，会按以下流程执行：
+`rule-keeper` 在被触发后，会按以下流程执行：
 
-1. **定位规则文件** —— 运行 `skills/rule-keeper-pro/scripts/find_rules_files.py <项目根>`，优先复用已存在的规则文件；不存在时从 `skills/rule-keeper-pro/assets/AGENTS.md.tmpl` 新建。
+1. **定位规则文件** —— 运行 `skills/rule-keeper/scripts/find_rules_files.py <项目根>`，优先复用已存在的规则文件；不存在时从 `skills/rule-keeper/assets/AGENTS.md.tmpl` 新建。
 2. **读取现状与采集变更信号** —— 通读规则文件，从会话决策、git 历史、约定风格、踩坑、验收标准中收集"可能值得写入"的信号。
 3. **评估并分类** —— 逐条过三道闸门（高信号 / 无重复 / 无矛盾），打标签：新增 / 修订 / 删除 / 合并 / 不变。
 4. **最小化写入** —— 用 `Edit` 增量修改，保留原措辞，新条目镜像相邻条目格式。
 5. **超额瘦身** —— 超过行数上限时长说明改链接、同模式合并、删除"过去是什么"的条目。
-6. **校验与自检** —— 运行 `skills/rule-keeper-pro/scripts/validate_rules.py <规则文件>`，并跑一遍自检清单。
+6. **校验与自检** —— 运行 `skills/rule-keeper/scripts/validate_rules.py <规则文件>`，并跑一遍自检清单。
 7. **汇报** —— 输出文件路径、变更小结（新增/修订/删除/合并各几条及原因）、当前行数/上限。
 
 ## 规则文件结构（6 段，默认 ≤ 150 行）
@@ -92,21 +92,21 @@ rule-keeper/
 | 6 | 元规则 | 本文件自身的更新协议 | ≤10 |
 
 - 默认硬上限 150 行；在文件头部声明 `maxLines: 200` 可覆盖（适用于大项目）。
-- 完整模板见 `skills/rule-keeper-pro/assets/AGENTS.md.tmpl`，格式规范见 `skills/rule-keeper-pro/references/rules-file-spec.md`。
+- 完整模板见 `skills/rule-keeper/assets/AGENTS.md.tmpl`，格式规范见 `skills/rule-keeper/references/rules-file-spec.md`。
 
 ## 脚本用法
 
 ### 定位规则文件
 
 ```bash
-python3 skills/rule-keeper-pro/scripts/find_rules_files.py [项目根目录]
+python3 skills/rule-keeper/scripts/find_rules_files.py [项目根目录]
 # 默认以当前目录为项目根；列出候选规则文件，未找到时建议在项目根创建 AGENTS.md
 ```
 
 ### 校验规则文件
 
 ```bash
-python3 skills/rule-keeper-pro/scripts/validate_rules.py <规则文件路径>
+python3 skills/rule-keeper/scripts/validate_rules.py <规则文件路径>
 # 退出码：0 = 通过或仅警告；1 = 存在错误；2 = 用法错误
 ```
 
